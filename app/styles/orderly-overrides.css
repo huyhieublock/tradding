@@ -1,0 +1,143 @@
+/* =============================================
+   Orderly Network UI - Purple-Blue Theme Overrides
+   ============================================= */
+
+/* Force override all color variables at :root level with !important */
+:root {
+  /* Primary colors - Purple theme */
+  --oui-color-primary: 139 92 246 !important;
+  --oui-color-primary-light: 167 139 250 !important;
+  --oui-color-primary-darken: 124 58 237 !important;
+  --oui-color-primary-contrast: 255 255 255 !important;
+
+  /* Link colors - Blue theme */
+  --oui-color-link: 59 130 246 !important;
+  --oui-color-link-light: 96 165 250 !important;
+
+  /* Base background colors - Purple-tinted dark */
+  --oui-color-base-1: 109 100 142 !important;
+  --oui-color-base-2: 88 80 121 !important;
+  --oui-color-base-3: 71 64 98 !important;
+  --oui-color-base-4: 59 52 84 !important;
+  --oui-color-base-5: 51 45 73 !important;
+  --oui-color-base-6: 42 37 60 !important;
+  --oui-color-base-7: 34 30 48 !important;
+  --oui-color-base-8: 26 23 37 !important;
+  --oui-color-base-9: 19 17 27 !important;
+  --oui-color-base-10: 12 11 18 !important;
+
+  /* Trading colors - Purple for profit/buy, Blue for loss/sell */
+  --oui-color-trading-loss: 59 130 246 !important; /* Blue */
+  --oui-color-trading-profit: 139 92 246 !important; /* Purple */
+
+  /* Gradients */
+  --oui-gradient-primary-start: 88 28 135 !important;
+  --oui-gradient-primary-end: 139 92 246 !important;
+  --oui-gradient-secondary-start: 30 64 175 !important;
+  --oui-gradient-secondary-end: 59 130 246 !important;
+  --oui-gradient-brand-start: 167 139 250 !important;
+  --oui-gradient-brand-end: 59 130 246 !important;
+}
+
+/* Direct class overrides with maximum specificity */
+html body .oui-text-trade-loss,
+html body .oui-text-trade-loss *,
+html body [class*="text-trade-loss"] {
+  color: rgb(59, 130, 246) !important; /* Blue for loss/sell */
+}
+
+html body .oui-text-trade-profit,
+html body .oui-text-trade-profit *,
+html body [class*="text-trade-profit"] {
+  color: rgb(139, 92, 246) !important; /* Purple for profit/buy */
+}
+
+html body .oui-text-primary,
+html body .oui-text-primary * {
+  color: rgb(139, 92, 246) !important; /* Purple */
+}
+
+html body .oui-text-link {
+  color: rgb(59, 130, 246) !important; /* Blue */
+}
+
+html body .oui-bg-trade-loss,
+html body .oui-bg-trade-loss\/10,
+html body [class*="bg-trade-loss"] {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+html body .oui-bg-trade-profit,
+html body .oui-bg-trade-profit\/10,
+html body [class*="bg-trade-profit"] {
+  background-color: rgba(139, 92, 246, 0.1) !important;
+}
+
+html body .oui-bg-primary {
+  background-color: rgb(139, 92, 246) !important;
+}
+
+html body .oui-bg-primary-darken {
+  background-color: rgb(124, 58, 237) !important;
+}
+
+html body .oui-gradient-brand {
+  background-image: linear-gradient(
+    135deg,
+    rgb(167, 139, 250) 0%,
+    rgb(59, 130, 246) 100%
+  ) !important;
+}
+
+/* Button colors */
+html body button[class*="buy"],
+html body button[class*="long"],
+html body .oui-bg-success {
+  background-color: rgb(139, 92, 246) !important; /* Purple for buy */
+}
+
+html body button[class*="sell"],
+html body button[class*="short"],
+html body .oui-bg-danger {
+  background-color: rgb(59, 130, 246) !important; /* Blue for sell */
+}
+
+/* Border colors */
+html body .oui-border-primary {
+  border-color: rgb(139, 92, 246) !important;
+}
+
+html body .oui-border-line,
+html body .oui-border-line-12 {
+  border-color: rgba(167, 139, 250, 0.12) !important;
+}
+
+/* Text colors for specific states */
+html body .oui-text-success {
+  color: rgb(139, 92, 246) !important;
+}
+
+html body .oui-text-danger {
+  color: rgb(59, 130, 246) !important;
+}
+
+/* SVG fills */
+html body .oui-fill-primary {
+  fill: rgb(139, 92, 246) !important;
+}
+
+html body .oui-fill-link {
+  fill: rgb(59, 130, 246) !important;
+}
+
+/* Override any hardcoded colors */
+html body [style*="rgb(255, 46, 105)"],
+html body [style*="#ff2e69"] {
+  color: rgb(59, 130, 246) !important;
+}
+
+html body [style*="rgb(46, 233, 43)"],
+html body [style*="rgb(55, 233, 43)"],
+html body [style*="#2ee92b"] {
+  color: rgb(139, 92, 246) !important;
+}

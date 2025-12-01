@@ -1,0 +1,537 @@
+// =============================================
+// SCSS Variables - Easy to customize
+// =============================================
+
+// Color palette - Purple & Blue theme
+$primary-color: #8b5cf6; // Purple
+$secondary-color: #3b82f6; // Blue
+$accent-color: #06b6d4; // Cyan accent
+$success-color: #10b981; // Green
+$danger-color: #ef4444; // Red
+$warning-color: #f59e0b; // Yellow
+
+// Background colors
+$bg-dark: #0a0e1a;
+$bg-darker: #050810;
+$bg-card: rgba(15, 23, 42, 0.8);
+$bg-gradient-start: #0a0e1a;
+$bg-gradient-end: #1e293b;
+
+// Border colors
+$border-primary: rgba(6, 182, 212, 0.4);
+$border-secondary: rgba(249, 115, 22, 0.4);
+$border-glow: rgba(6, 182, 212, 0.6);
+
+// Text colors
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-muted: rgba(255, 255, 255, 0.5);
+
+// Spacing
+$spacing-xs: 8px;
+$spacing-sm: 12px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+
+// Border radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 24px;
+$radius-full: 9999px;
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// Z-index
+$z-base: 1;
+$z-dropdown: 100;
+$z-sticky: 500;
+$z-modal: 1000;
+$z-tooltip: 1500;
+
+// =============================================
+// Mixins - Reusable styles
+// =============================================
+
+// Gradient background
+@mixin gradient-bg(
+  $direction: 135deg,
+  $color1: $primary-color,
+  $color2: $secondary-color
+) {
+  background: linear-gradient($direction, $color1 0%, $color2 100%);
+}
+
+// Glass effect
+@mixin glass-effect($blur: 20px, $opacity: 0.1) {
+  backdrop-filter: blur($blur);
+  background: rgba(255, 255, 255, $opacity);
+}
+
+// Glow effect
+@mixin glow($color: $primary-color, $intensity: 0.5) {
+  box-shadow: 0 0 20px rgba($color, $intensity * 0.3),
+    0 0 40px rgba($color, $intensity * 0.2),
+    0 0 60px rgba($color, $intensity * 0.1);
+}
+
+// Hover lift effect
+@mixin hover-lift($translate: -4px) {
+  transition: all $transition-normal;
+
+  &:hover {
+    transform: translateY($translate);
+  }
+}
+
+// Card style
+@mixin card($padding: $spacing-lg) {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: $padding;
+  border: 1px solid $border-primary;
+}
+
+// Neon border animation
+@mixin neon-border($color1: $primary-color, $color2: $secondary-color) {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, $color1, $color2, $color1);
+    background-size: 400% 400%;
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity $transition-normal;
+    animation: neon-glow 3s ease infinite;
+  }
+
+  &:hover::before {
+    opacity: 0.7;
+  }
+}
+
+// =============================================
+// Keyframe Animations
+// =============================================
+
+@keyframes neon-glow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba($primary-color, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba($primary-color, 0.8);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// =============================================
+// Main Styles
+// =============================================
+
+.perp-container {
+  position: relative;
+  min-height: 100vh;
+  padding: $spacing-lg;
+  background: linear-gradient(
+    180deg,
+    $bg-gradient-start 0%,
+    $bg-gradient-end 100%
+  );
+
+  // Animated background pattern
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        circle at 20% 20%,
+        rgba($primary-color, 0.1) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 80%,
+        rgba($secondary-color, 0.1) 0%,
+        transparent 50%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // Content wrapper
+  > * {
+    position: relative;
+    z-index: $z-base;
+  }
+}
+
+// =============================================
+// Custom Header Section
+// =============================================
+
+.perp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xl;
+  padding: $spacing-lg $spacing-xl;
+  background: linear-gradient(
+    135deg,
+    rgba($primary-color, 0.15) 0%,
+    rgba($secondary-color, 0.15) 100%
+  );
+  border-radius: $radius-xl;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  animation: slide-in 0.6s ease;
+
+  // Gradient border effect
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  // Left border accent với animation
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 5px;
+    background: linear-gradient(180deg, $primary-color, $secondary-color);
+    border-radius: 0 $radius-sm $radius-sm 0;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  &-title {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(
+      135deg,
+      $primary-color 0%,
+      $secondary-color 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    margin-bottom: $spacing-xs;
+    text-shadow: 0 0 30px rgba($primary-color, 0.5);
+
+    // Neon glow effect
+    filter: drop-shadow(0 0 10px rgba($primary-color, 0.6));
+  }
+
+  &-subtitle {
+    font-size: 14px;
+    color: $text-secondary;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  &-badge {
+    padding: $spacing-xs $spacing-md;
+    background: rgba($success-color, 0.2);
+    border: 1px solid rgba($success-color, 0.4);
+    border-radius: $radius-full;
+    color: $success-color;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-xs;
+
+    &::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: $success-color;
+      border-radius: 50%;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+  }
+}
+
+// =============================================
+// Trading Wrapper
+// =============================================
+
+.perp-trading-wrapper {
+  @include card($spacing-xl);
+  @include neon-border($primary-color, $secondary-color);
+
+  border: 2px solid $border-primary;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all $transition-normal;
+  animation: slide-in 0.8s ease 0.2s both;
+
+  &:hover {
+    border-color: $border-glow;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+      0 0 50px rgba($primary-color, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+  }
+
+  // Corner accents
+  &::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, $primary-color, transparent);
+    border-radius: 0 $radius-lg 0 0;
+    opacity: 0.5;
+  }
+  .oui-bg-base-9 {
+    background: linear-gradient(
+      135deg,
+      rgba($primary-color, 0.15) 0%,
+      rgba($secondary-color, 0.15) 100%
+    );
+    border-radius: $radius-xl;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    animation: slide-in 0.6s ease;
+  }
+}
+
+// =============================================
+// Custom Scrollbar
+// =============================================
+
+.perp-container {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: $bg-darker;
+    border-radius: $radius-sm;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      $primary-color 0%,
+      $secondary-color 100%
+    );
+    border-radius: $radius-sm;
+    border: 2px solid $bg-darker;
+
+    &:hover {
+      background: linear-gradient(
+        180deg,
+        lighten($primary-color, 10%) 0%,
+        lighten($secondary-color, 10%) 100%
+      );
+    }
+  }
+}
+
+// =============================================
+// Floating Action Button
+// =============================================
+
+.perp-fab {
+  position: fixed;
+  bottom: $spacing-xl;
+  right: $spacing-xl;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  @include gradient-bg(135deg, $primary-color, $secondary-color);
+  @include glow($primary-color, 0.6);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all $transition-normal;
+  z-index: $z-sticky;
+  animation: float 3s ease-in-out infinite;
+
+  &:hover {
+    transform: scale(1.15) rotate(180deg);
+    @include glow($primary-color, 1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// =============================================
+// Info Card (Demo component)
+// =============================================
+
+.perp-info-card {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-lg;
+  border: 1px solid $border-secondary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  @include hover-lift(-2px);
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-md;
+    @include gradient-bg(135deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 4px;
+  }
+
+  &__description {
+    font-size: 14px;
+    color: $text-muted;
+  }
+}
+
+// =============================================
+// Responsive Design
+// =============================================
+
+@media (max-width: 1024px) {
+  .perp-header {
+    padding: $spacing-md $spacing-lg;
+
+    &-title {
+      font-size: 24px;
+    }
+  }
+
+  .perp-trading-wrapper {
+    padding: $spacing-lg;
+  }
+}
+
+@media (max-width: 768px) {
+  .perp-container {
+    padding: $spacing-sm;
+  }
+
+  .perp-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $spacing-md;
+    margin-bottom: $spacing-lg;
+
+    &-title {
+      font-size: 20px;
+    }
+
+    &-subtitle {
+      font-size: 12px;
+    }
+  }
+
+  .perp-trading-wrapper {
+    padding: $spacing-md;
+    border-radius: $radius-md;
+  }
+
+  .perp-fab {
+    bottom: $spacing-lg;
+    right: $spacing-lg;
+    width: 56px;
+    height: 56px;
+  }
+}
+
+// =============================================
+// Utility Classes
+// =============================================
+
+.text-gradient {
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba($primary-color, 0.8);
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
