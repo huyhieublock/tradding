@@ -1,92 +1,65 @@
+// src/pages/perp/Symbol.tsx
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { API } from "@orderly.network/types";
-import { TradingPage } from "@orderly.network/trading";
 import { updateSymbol } from "@/utils/storage";
 import { formatSymbol, generatePageTitle } from "@/utils/utils";
 import { useOrderlyConfig } from "@/utils/config";
 import { getPageMeta } from "@/utils/seo";
 import { renderSEOTags } from "@/utils/seo-tags";
 import OrderBookPanel from "./OrderBookPanel";
-import "./perp.styles.scss";
 import MarketOverview from "./MarketOverview";
 import OrderForm from "./OrderForm";
 import UserPanel from "./UserPanel";
-import 
+import TradingChart from "./TradingChart";
 
 export default function PerpSymbol() {
   const params = useParams();
-  const [symbol, setSymbol] = useState(params.symbol!);
-  const config = useOrderlyConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Lấy symbol từ URL, mặc định là PERP_ETH_USDC nếu thiếu
+  const symbol = params.symbol || "PERP_ETH_USDC";
+
+  // Cập nhật Local Storage khi symbol thay đổi
   useEffect(() => {
-    updateSymbol(symbol);
+    if (symbol) {
+      updateSymbol(symbol);
+    }
   }, [symbol]);
 
-  const onSymbolChange = useCallback(
-    (data: API.Symbol) => {
-      const symbol = data.symbol;
-      setSymbol(symbol);
-
-      const searchParamsString = searchParams.toString();
-      const queryString = searchParamsString ? `?${searchParamsString}` : "";
-
-      navigate(`/perp/${symbol}${queryString}`);
-    },
-    [navigate, searchParams]
-  );
-
+  // Logic SEO
   const pageMeta = getPageMeta();
-  const pageTitle = generatePageTitle(formatSymbol(params.symbol!));
+  const pageTitle = generatePageTitle(formatSymbol(symbol));
 
   return (
     <>
       {renderSEOTags(pageMeta, pageTitle)}
-      <div className="perp-container">
-        <div className="perp-header">
-          <div>
-            <div className="perp-header-title">
-              {formatSymbol(symbol)} Trading
-            </div>
-            <div className="perp-header-subtitle">
-              Advanced perpetual futures trading
-            </div>
-          </div>
-          <div className="perp-header-badge">Live Trading</div>
-        </div>
-        <div className="perp-trading-wrapper">
-          {/* <TradingPage
-            symbol={symbol}
-            onSymbolChange={onSymbolChange}
-            tradingViewConfig={config.tradingPage.tradingViewConfig}
-            sharePnLConfig={config.tradingPage.sharePnLConfig}
-          /> */}
-
-          {/* Market Overview */}
+      <div className="perp-container min-h-screen bg-[#0b0e11] text-white">
+        <div className="p-4">
+          {/* Market Overview - Truyền symbol vào */}
           <MarketOverview symbol={symbol} />
 
           {/* Main Grid Layout */}
           <div className="grid grid-cols-12 gap-4 mt-4">
-            {/* Cột 1: Sổ lệnh (Order Book) - Chiếm 3/12 */}
-            <div className="col-span-12 lg:col-span-3">
-              <OrderBookPanel symbol={symbol} />
-            </div>
+            {/* Cột 1: Chart & Position (Chiếm 9/12) */}
+            <div className="col-span-12 lg:col-span-9 flex flex-col gap-4">
+              {/* QUAN TRỌNG: Thêm key={symbol} để ép Chart re-mount khi đổi coin */}
+              <div className="h-[500px]">
+                <TradingChart key={symbol} symbol={symbol} />
+              </div>
 
-            {/* Cột 2: Biểu đồ (Chart) - Chiếm 6/12 */}
-            <div className="col-span-12 lg:col-span-6 bg-gray-800 p-4 rounded-lg h-[400px]">
-              <TradingChart />
-            </div>
-
-            {/* Cột 3: Form Đặt lệnh (Order Form) - Chiếm 3/12 */}
-            <div className="col-span-12 lg:col-span-3">
-              <OrderForm symbol={symbol} />
-            </div>
-
-            {/* Hàng dưới: Vị thế & Lệnh mở (Chiếm toàn bộ chiều rộng) */}
-            <div className="col-span-12">
+              {/* User Panel (Vị thế, Lệnh chờ) */}
               <UserPanel symbol={symbol} />
+            </div>
+
+            {/* Cột 2: Orderbook & Form (Chiếm 3/12) */}
+            <div className="col-span-12 lg:col-span-3 flex flex-col gap-4">
+              {/* Order Book */}
+              <OrderBookPanel symbol={symbol} />
+
+              {/* Order Form */}
+              <OrderForm symbol={symbol} />
             </div>
           </div>
         </div>

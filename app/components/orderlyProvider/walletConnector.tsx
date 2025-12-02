@@ -1,9 +1,12 @@
-import { ReactNode } from 'react';
-import { WalletConnectorProvider } from '@orderly.network/wallet-connector';
+import { ReactNode } from "react";
+import { WalletConnectorProvider } from "@orderly.network/wallet-connector";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import type { NetworkId } from "@orderly.network/types";
-import { getEvmInitialConfig, getSolanaWallets } from '../../utils/walletConfig';
-import { getRuntimeConfigBoolean } from '@/utils/runtime-config';
+import {
+  getEvmInitialConfig,
+  getSolanaWallets,
+} from "../../utils/walletConfig";
+import { getRuntimeConfigBoolean } from "@/utils/runtime-config";
 
 interface WalletConnectorProps {
   children: ReactNode;
@@ -11,15 +14,24 @@ interface WalletConnectorProps {
 }
 
 const WalletConnector = ({ children, networkId }: WalletConnectorProps) => {
-  const disableEVMWallets = getRuntimeConfigBoolean('VITE_DISABLE_EVM_WALLETS');
-  const disableSolanaWallets = getRuntimeConfigBoolean('VITE_DISABLE_SOLANA_WALLETS');
+  const disableEVMWallets = getRuntimeConfigBoolean("VITE_DISABLE_EVM_WALLETS");
+  const disableSolanaWallets = getRuntimeConfigBoolean(
+    "VITE_DISABLE_SOLANA_WALLETS"
+  );
 
-  const evmInitial = disableEVMWallets ? undefined : getEvmInitialConfig();
+  const evmInitial = disableEVMWallets
+    ? undefined
+    : getEvmInitialConfig(networkId);
 
-  const solanaInitial = disableSolanaWallets ? undefined : {
-    network: networkId === 'mainnet' ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet,
-    wallets: getSolanaWallets(networkId),
-  };
+  const solanaInitial = disableSolanaWallets
+    ? undefined
+    : {
+        network:
+          networkId === "mainnet"
+            ? WalletAdapterNetwork.Mainnet
+            : WalletAdapterNetwork.Devnet,
+        wallets: getSolanaWallets(networkId),
+      };
 
   return (
     <WalletConnectorProvider
@@ -31,4 +43,4 @@ const WalletConnector = ({ children, networkId }: WalletConnectorProps) => {
   );
 };
 
-export default WalletConnector; 
+export default WalletConnector;

@@ -1,96 +1,202 @@
-import React from "react";
-import { OrderBookItem, useOrderbookStream } from "@orderly.network/hooks";
+// src/components/OrderBookPanel.tsx
+import React, { useMemo } from "react";
+import { useOrderbookStream, useTickerStream } from "@orderly.network/hooks";
+import { ArrowDown, ArrowUp, EllipsisIcon } from "lucide-react";
 
-interface OrderBookProps {
+interface OrderBookPanelProps {
   symbol: string;
 }
 
-const OrderBookPanel: React.FC<OrderBookProps> = ({ symbol }) => {
-  const orderBookStream = useOrderbookStream(symbol);
+// Hàm format số lượng (VD: 17.41K)
+const formatCompact = (num: number) => {
+  if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(2) + "K";
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  });
+};
 
-  const renderRows = ({
+// Hàm format giá tiền
+const formatPrice = (price: number) => {
+  return price.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const OrderBookPanel: React.FC<OrderBookPanelProps> = ({ symbol }) => {
+  // 1. Lấy tên Token Base từ Symbol (VD: PERP_ETH_USDC -> ETH)
+  const baseToken = useMemo(() => {
+    if (!symbol) return "";
+    const parts = symbol.split("_");
+    // Cấu trúc thường là TYPE_BASE_QUOTE (PERP_ETH_USDC) -> Lấy phần tử thứ 2
+    return parts.length >= 2 ? parts[1] : "BTC";
+  }, [symbol]);
+
+  // 2. Lấy dữ liệu Orderbook (Destructuring mảng theo đúng Type bạn cung cấp)
+  // [0]: Data (asks, bids, markPrice)
+  // [1]: Meta (isLoading, onDepthChange...)
+  const [obData, obConfig] = useOrderbookStream(symbol);
+
+  // 3. Lấy dữ liệu Ticker để hiển thị Last Price ở giữa (vì Orderbook không có lastPrice)
+  const ticker = useTickerStream(symbol);
+
+  // Destructure an toàn
+  const asks = useMemo(() => obData?.asks || [], [obData]);
+  const bids = useMemo(() => obData?.bids || [], [obData]);
+
+  // Ưu tiên lấy markPrice từ ticker (nhanh hơn), nếu không có thì lấy từ orderbook
+  const markPrice = ticker?.mark_price || obData?.markPrice || 0;
+
+  // Giá Last Price (Dùng để so sánh màu sắc)
+  // Trong Type TickerStream có mark_price, dùng nó đại diện cho giá hiện tại
+  const currentPrice = ticker?.mark_price || 0;
+
+  // Cấu hình hiển thị số dòng
+  const ROW_COUNT = 14;
+
+  // --- Xử lý ASKS (Bán) ---
+  const renderAsks = useMemo(() => {
+    // Lấy 14 lệnh đầu tiên
+    const sliced = asks.slice(0, ROW_COUNT);
+    // Đảo ngược: Giá thấp nhất ở dưới cùng (gần middle bar)
+    return [...sliced].reverse();
+  }, [asks]);
+
+  // --- Xử lý BIDS (Mua) ---
+  const renderBids = useMemo(() => {
+    return bids.slice(0, ROW_COUNT);
+  }, [bids]);
+
+  // --- Tính Max Volume cho thanh Depth Bar ---
+  const maxVolume = useMemo(() => {
+    const maxAsk = Math.max(...renderAsks.map(([_, qty]) => qty), 0);
+    const maxBid = Math.max(...renderBids.map(([_, qty]) => qty), 0);
+    return Math.max(maxAsk, maxBid) || 1;
+  }, [renderAsks, renderBids]);
+
+  // --- Component con: Một dòng lệnh ---
+  const OrderRow = ({
+    item,
     type,
-    asks,
-    bids,
+    maxVol,
   }: {
-    type: "BUY" | "SELL";
-    asks?: OrderBookItem[];
-    bids?: OrderBookItem[];
+    item: number[];
+    type: "buy" | "sell";
+    maxVol: number;
   }) => {
-    // Chỉ hiển thị 10 mức giá đầu tiên
-    const rows =
-      type === "BUY" ? bids?.slice(0, 10) : asks?.slice(0, 10)?.reverse();
+    const price = item[0];
+    const amount = item[1];
+    const total = price * amount;
+    const depthWidth = `${Math.min((amount / maxVol) * 100, 100)}%`;
 
-    return rows?.map(([price, quantity], index) => {
-      // Tính toán độ sâu (depth) cho thanh màu nền
-      const maxQty =
-        Math.max(
-          ...(bids?.map((b) => b[1]) || []),
-          ...(asks?.map((a) => a[1]) || [])
-        ) || 1;
-      const depth = (quantity / maxQty) * 100;
-
-      return (
+    return (
+      <div className="flex justify-between items-center text-xs py-[2px] relative group hover:bg-gray-800 cursor-pointer">
         <div
-          key={index}
-          className={`flex justify-between px-2 py-[2px] text-sm relative cursor-pointer
-              ${type === "BUY" ? "text-green-400" : "text-red-400"}`}
+          className={`absolute top-0 bottom-0 right-0 opacity-20 z-0 transition-all duration-200 ${
+            type === "sell" ? "bg-red-500" : "bg-green-500"
+          }`}
+          style={{ width: depthWidth }}
+        />
+        <span
+          className={`z-10 w-[30%] text-left pl-2 font-mono ${
+            type === "sell" ? "text-red-400" : "text-emerald-400"
+          }`}
         >
-          {/* Thanh màu nền hiển thị độ sâu */}
-          <div
-            style={{ width: `${depth}%` }}
-            className={`absolute ${
-              type === "BUY" ? "bg-green-900/50" : "bg-red-900/50"
-            } right-0 top-0 bottom-0 z-0`}
-          />
-          <span className="z-10">{price.toFixed(4)}</span>
-          <span className="z-10">{quantity.toFixed(4)}</span>
-        </div>
-      );
-    });
+          {formatPrice(price)}
+        </span>
+        <span className="z-10 w-[35%] text-right font-mono text-gray-300">
+          {amount.toFixed(4)}
+        </span>
+        <span className="z-10 w-[35%] text-right pr-2 font-mono text-gray-500">
+          {formatCompact(total)}
+        </span>
+      </div>
+    );
   };
 
+  if (obConfig.isLoading && !asks.length) {
+    return (
+      <div className="bg-[#111827] h-[550px] flex items-center justify-center text-gray-500 text-xs">
+        Loading Orderbook...
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-800 p-3 rounded-lg h-[400px] overflow-hidden flex flex-col">
-      <h3 className="text-xl font-semibold mb-2">Sổ Lệnh ({symbol})</h3>
+    <div className="bg-[#111827] border border-gray-700 rounded-lg w-full flex flex-col h-[550px] overflow-hidden shadow-xl select-none">
+      {/* HEADER */}
+      <div className="flex justify-between items-center p-3 border-b border-gray-800">
+        <h3 className="text-sm font-bold text-white">Order Book</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-gray-800 rounded p-0.5">
+            <button className="p-1 hover:bg-gray-700 rounded text-gray-400">
+              <EllipsisIcon />
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {orderBookStream.map((data, index) => {
-        const latestPrice = data.bids?.[0]?.[0] || 0;
+      {/* COLUMN HEADERS - Dynamic Token Name */}
+      <div className="flex justify-between text-[10px] text-gray-500 uppercase font-semibold py-2 px-1">
+        <span className="w-[30%] pl-2 text-left">Price (USDC)</span>
+        <span className="w-[35%] text-right">Amount ({baseToken})</span>
+        <span className="w-[35%] pr-2 text-right">Total</span>
+      </div>
 
-        return (
-          <React.Fragment key={index}>
-            {/* Asks (Bán) */}
-            <div className="flex-1 overflow-y-auto order-3">
-              {renderRows({
-                type: "BUY",
-                asks: data.asks,
-                bids: data.bids,
-              })}
-            </div>
-            {/* Giá thị trường hiện tại */}
-            <div className="text-center py-2 my-1 border-y border-gray-700 order-2">
-              <span
-                className={`text-2xl font-bold ${
-                  latestPrice >= (data.bids?.[0]?.[0] || 0)
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
-              >
-                {latestPrice ? Number(latestPrice).toFixed(4) : "--"}
-              </span>
-            </div>
+      {/* ASKS (SELL) */}
+      <div className="flex-1 overflow-hidden flex flex-col justify-end">
+        {renderAsks.map((item, idx) => (
+          <OrderRow
+            key={`ask-${idx}`}
+            item={item}
+            type="sell"
+            maxVol={maxVolume}
+          />
+        ))}
+      </div>
 
-            {/* Bids (Mua) */}
-            <div className="flex-1 overflow-y-auto order-1">
-              {renderRows({
-                type: "SELL",
-                asks: data.asks,
-                bids: data.bids,
-              })}
-            </div>
-          </React.Fragment>
-        );
-      })}
+      {/* MIDDLE BAR (Current Price) */}
+      <div className="py-2 px-3 my-1 border-y border-gray-800 flex items-center justify-between bg-gray-800/50">
+        <div className="flex items-center gap-2">
+          {/* Hiển thị giá hiện tại từ Ticker */}
+          <span
+            className={`text-xl font-bold font-mono ${
+              (ticker?.["24h_change"] || 0) >= 0
+                ? "text-emerald-400"
+                : "text-red-400"
+            }`}
+          >
+            {formatPrice(currentPrice)}
+          </span>
+          {(ticker?.["24h_change"] || 0) >= 0 ? (
+            <ArrowUp className="text-emerald-400" />
+          ) : (
+            <ArrowDown className="text-red-400" />
+          )}
+        </div>
+
+        {/* Mark Price nhỏ hơn bên cạnh */}
+        <span
+          className="text-xs text-gray-500 underline decoration-dotted cursor-help"
+          title="Mark Price"
+        >
+          {formatPrice(markPrice)}
+        </span>
+      </div>
+
+      {/* BIDS (BUY) */}
+      <div className="flex-1 overflow-hidden">
+        {renderBids.map((item, idx) => (
+          <OrderRow
+            key={`bid-${idx}`}
+            item={item}
+            type="buy"
+            maxVol={maxVolume}
+          />
+        ))}
+      </div>
     </div>
   );
 };

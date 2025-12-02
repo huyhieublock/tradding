@@ -17,28 +17,28 @@ const UserPanel: React.FC<UserPanelProps> = ({ symbol }) => {
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 min-h-[300px] flex flex-col">
+    <div className="bg-[#1f2937] rounded-lg border border-gray-700 min-h-[300px] flex flex-col shadow-lg">
       {/* Tabs Header */}
       <div className="flex border-b border-gray-700">
         <button
-          className={`px-6 py-3 font-semibold text-sm transition-colors ${
+          className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${
             activeTab === "POSITIONS"
-              ? "text-blue-400 border-b-2 border-blue-400 bg-gray-700/50"
-              : "text-gray-400 hover:text-white"
+              ? "text-blue-400 border-blue-400 bg-gray-700/20"
+              : "text-gray-400 border-transparent hover:text-white"
           }`}
           onClick={() => setActiveTab("POSITIONS")}
         >
-          Vị thế (Positions)
+          Positions
         </button>
         <button
-          className={`px-6 py-3 font-semibold text-sm transition-colors ${
+          className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${
             activeTab === "OPEN_ORDERS"
-              ? "text-blue-400 border-b-2 border-blue-400 bg-gray-700/50"
-              : "text-gray-400 hover:text-white"
+              ? "text-blue-400 border-blue-400 bg-gray-700/20"
+              : "text-gray-400 border-transparent hover:text-white"
           }`}
           onClick={() => setActiveTab("OPEN_ORDERS")}
         >
-          Lệnh mở (Open Orders)
+          Open Orders
         </button>
       </div>
 
@@ -56,41 +56,40 @@ const UserPanel: React.FC<UserPanelProps> = ({ symbol }) => {
 
 // --- Sub-component: Positions Table ---
 const PositionsTable = ({ symbol }: { symbol: string }) => {
-  // Lấy toàn bộ vị thế (symbol='all' hoặc để trống nếu muốn xem portfolio,
-  // ở đây ta lọc theo symbol hiện tại hoặc hiển thị tất cả nếu muốn)
-  // Trong d.ts: usePositionStream(symbol?: string, ...)
-  const [data, info, { isLoading }] = usePositionStream(symbol);
-
-  // Lấy action đóng vị thế nhanh
+  // usePositionStream trả về tuple: [data, info, status]
+  const [data, , { isLoading }] = usePositionStream(symbol);
   const { closePosition } = usePositionActions();
 
   if (isLoading)
-    return <div className="p-4 text-gray-400 text-sm">Đang tải vị thế...</div>;
+    return (
+      <div className="p-4 text-gray-400 text-xs">Loading positions...</div>
+    );
+
+  // Kiểm tra nếu không có rows hoặc rows rỗng
   if (!data?.rows || data.rows.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500 text-sm">
-        Không có vị thế mở nào.
+        No open positions.
       </div>
     );
   }
 
   return (
     <table className="w-full text-left border-collapse">
-      <thead className="bg-gray-900 text-xs text-gray-400 uppercase">
+      <thead className="bg-gray-900/50 text-xs text-gray-400 uppercase">
         <tr>
           <th className="p-3">Symbol</th>
           <th className="p-3">Side</th>
           <th className="p-3 text-right">Size</th>
           <th className="p-3 text-right">Entry Price</th>
           <th className="p-3 text-right">Mark Price</th>
-          <th className="p-3 text-right">Est. Liq Price</th>
-          <th className="p-3 text-right">Unrealized PnL</th>
+          <th className="p-3 text-right">Liq. Price</th>
+          <th className="p-3 text-right">uPNL</th>
           <th className="p-3 text-center">Action</th>
         </tr>
       </thead>
-      <tbody className="text-sm text-white divide-y divide-gray-700">
+      <tbody className="text-sm text-white divide-y divide-gray-800">
         {data.rows.map((pos: API.PositionTPSLExt) => {
-          // position_qty > 0 là Long, < 0 là Short
           const isLong = pos.position_qty > 0;
           const pnl = pos.unrealized_pnl || 0;
           const pnlColor = pnl >= 0 ? "text-green-500" : "text-red-500";
@@ -110,15 +109,15 @@ const PositionsTable = ({ symbol }: { symbol: string }) => {
               </td>
               <td className="p-3 text-right">{Math.abs(pos.position_qty)}</td>
               <td className="p-3 text-right">
-                {pos.average_open_price.toFixed(4)}
+                {pos.average_open_price?.toFixed(2)}
               </td>
-              <td className="p-3 text-right">{pos.mark_price.toFixed(4)}</td>
+              <td className="p-3 text-right">{pos.mark_price?.toFixed(2)}</td>
               <td className="p-3 text-right text-orange-400">
-                {pos.est_liq_price ? pos.est_liq_price.toFixed(4) : "--"}
+                {pos.est_liq_price ? pos.est_liq_price.toFixed(2) : "--"}
               </td>
               <td className={`p-3 text-right font-mono ${pnlColor}`}>
                 {pnl > 0 ? "+" : ""}
-                {pnl.toFixed(2)} USDC
+                {pnl.toFixed(2)}
               </td>
               <td className="p-3 text-center">
                 <button
@@ -138,46 +137,45 @@ const PositionsTable = ({ symbol }: { symbol: string }) => {
 
 // --- Sub-component: Open Orders Table ---
 const OpenOrdersTable = ({ symbol }: { symbol: string }) => {
-  // Sử dụng useOrderStream để lấy lệnh chưa hoàn thành (INCOMPLETE)
+  // useOrderStream trả về tuple: [data, meta]
+  // Lọc lấy các lệnh chưa hoàn thành (INCOMPLETE)
   const [orders, { cancelOrder, cancelAllPendingOrders, isLoading }] =
     useOrderStream({
-      symbol, // Lọc theo cặp hiện tại
-      status: OrderStatus.INCOMPLETE, // Chỉ lấy lệnh đang chờ
+      symbol,
+      status: OrderStatus.INCOMPLETE,
     });
 
   const handleCancel = async (orderId: number) => {
     try {
       await cancelOrder(orderId, symbol);
     } catch (e) {
-      console.error("Lỗi hủy lệnh:", e);
-      alert("Không thể hủy lệnh");
+      console.error("Cancel failed:", e);
     }
   };
 
   if (isLoading && (!orders || orders.length === 0))
-    return <div className="p-4 text-gray-400 text-sm">Đang tải lệnh...</div>;
+    return <div className="p-4 text-gray-400 text-xs">Loading orders...</div>;
   if (!orders || orders.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500 text-sm">
-        Không có lệnh chờ nào.
+        No open orders.
       </div>
     );
   }
 
   return (
     <div>
-      {/* Nút Hủy tất cả */}
-      <div className="p-2 flex justify-end bg-gray-900/50">
+      <div className="p-2 flex justify-end bg-gray-900/30">
         <button
           onClick={() => cancelAllPendingOrders(symbol)}
-          className="text-xs text-red-400 hover:text-red-300 underline"
+          className="text-xs text-red-400 hover:text-red-300 border border-red-900/50 px-2 py-1 rounded hover:bg-red-900/20 transition-colors"
         >
-          Hủy tất cả lệnh {symbol}
+          Cancel All {symbol}
         </button>
       </div>
 
       <table className="w-full text-left border-collapse">
-        <thead className="bg-gray-900 text-xs text-gray-400 uppercase">
+        <thead className="bg-gray-900/50 text-xs text-gray-400 uppercase">
           <tr>
             <th className="p-3">Time</th>
             <th className="p-3">Type</th>
@@ -188,8 +186,9 @@ const OpenOrdersTable = ({ symbol }: { symbol: string }) => {
             <th className="p-3 text-center">Action</th>
           </tr>
         </thead>
-        <tbody className="text-sm text-white divide-y divide-gray-700">
-          {orders.map((order) => (
+        <tbody className="text-sm text-white divide-y divide-gray-800">
+          {/* Ép kiểu về API.Order để TypeScript hiểu các trường */}
+          {(orders as API.Order[]).map((order) => (
             <tr
               key={order.order_id}
               className="hover:bg-gray-700/30 transition-colors"
@@ -197,7 +196,7 @@ const OpenOrdersTable = ({ symbol }: { symbol: string }) => {
               <td className="p-3 text-gray-400 text-xs">
                 {new Date(order.created_time).toLocaleTimeString()}
               </td>
-              <td className="p-3">{order.type || "LIMIT"}</td>
+              <td className="p-3 text-xs">{order.type}</td>
               <td
                 className={`p-3 font-semibold ${
                   order.side === OrderSide.BUY
@@ -208,16 +207,16 @@ const OpenOrdersTable = ({ symbol }: { symbol: string }) => {
                 {order.side}
               </td>
               <td className="p-3 text-right">
-                {order.price ? order.price.toFixed(4) : "Market"}
+                {order.price ? order.price.toFixed(2) : "Market"}
               </td>
               <td className="p-3 text-right">{order.quantity}</td>
               <td className="p-3 text-right text-gray-400">
-                {order.executed_quantity || 0}
+                {order.total_executed_quantity || 0}
               </td>
               <td className="p-3 text-center">
                 <button
                   onClick={() => handleCancel(order.order_id)}
-                  className="text-red-500 hover:text-red-400 font-bold text-xs border border-red-500/30 hover:bg-red-500/10 px-2 py-1 rounded"
+                  className="text-red-500 hover:text-red-400 text-xs border border-red-500/30 hover:bg-red-500/10 px-2 py-1 rounded transition-colors"
                 >
                   Cancel
                 </button>

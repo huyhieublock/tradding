@@ -61,5 +61,17 @@ export default defineConfig(() => {
     optimizeDeps: {
       include: ["react", "react-dom", "react-router-dom"],
     },
+    server: {
+      proxy: {
+        "/api/orderly": {
+          // Dùng server EVM Testnet (Chuẩn cho SDK React hiện tại)
+          target: "https://testnet-api-evm.orderly.org",
+          changeOrigin: true,
+          secure: false,
+          // Rewrite: Khi gọi /api/orderly/tv/history -> sẽ thành https://.../v1/tv/history
+          rewrite: (path) => path.replace(/^\/api\/orderly/, "/v1"),
+        },
+      },
+    },
   };
 });
