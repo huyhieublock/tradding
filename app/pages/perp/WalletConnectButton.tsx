@@ -18,6 +18,7 @@ export const WalletConnectButton = () => {
     try {
       // 1. Nếu chưa kết nối ví L1 (Metamask/Rabby...)
       if (!wallet) {
+        console.log("🖱️ Clicking Connect...");
         await connect();
         return;
       }

@@ -7366,7 +7366,7 @@
     svelte-i18n "^4.0.1"
     viem "2.12.0"
 
-"@web3-onboard/core@^2.22.2":
+"@web3-onboard/core@^2.22.2", "@web3-onboard/core@^2.24.1":
   version "2.24.1"
   resolved "https://registry.npmjs.org/@web3-onboard/core/-/core-2.24.1.tgz"
   integrity sha512-IhiWF0M4BfnayLdmPoNpckjStlZ4G2N8JylJ92pf6+uWbnvhje8Svka9Oq6nfmfuU7Nbbqx3BVyivEN0kL6dyA==
@@ -7384,36 +7384,9 @@
     svelte-i18n "^4.0.1"
     viem "2.12.0"
 
-"@web3-onboard/core@^2.24.1":
-  version "2.24.1"
-  resolved "https://registry.yarnpkg.com/@web3-onboard/core/-/core-2.24.1.tgz#4c1bcc686dd43ba77a8aaaf43aa639a630c4b6d4"
-  integrity sha512-IhiWF0M4BfnayLdmPoNpckjStlZ4G2N8JylJ92pf6+uWbnvhje8Svka9Oq6nfmfuU7Nbbqx3BVyivEN0kL6dyA==
-  dependencies:
-    "@web3-onboard/common" "^2.4.1"
-    bnc-sdk "^4.6.7"
-    bowser "^2.11.0"
-    eventemitter3 "^4.0.7"
-    joi "17.9.1"
-    lodash.merge "^4.6.2"
-    lodash.partition "^4.6.0"
-    nanoid "^4.0.0"
-    rxjs "^7.5.5"
-    svelte "^3.49.0"
-    svelte-i18n "^4.0.1"
-    viem "2.12.0"
-
-"@web3-onboard/injected-wallets@^2.10.16":
+"@web3-onboard/injected-wallets@^2.10.16", "@web3-onboard/injected-wallets@^2.11.3":
   version "2.11.3"
   resolved "https://registry.npmjs.org/@web3-onboard/injected-wallets/-/injected-wallets-2.11.3.tgz"
-  integrity sha512-DSfcJRwe7KgXHSosXSz8QUMpoSTd6ltrb3qb8xhDjwLdpYlSlcmhaH5blP/gvNeB38imiJ9xCQpnI5tpaLKneQ==
-  dependencies:
-    "@web3-onboard/common" "^2.4.1"
-    joi "17.9.1"
-    lodash.uniqby "^4.7.0"
-
-"@web3-onboard/injected-wallets@^2.11.3":
-  version "2.11.3"
-  resolved "https://registry.yarnpkg.com/@web3-onboard/injected-wallets/-/injected-wallets-2.11.3.tgz#adbbd1eba48a373fe923527d7da379a6be79cbeb"
   integrity sha512-DSfcJRwe7KgXHSosXSz8QUMpoSTd6ltrb3qb8xhDjwLdpYlSlcmhaH5blP/gvNeB38imiJ9xCQpnI5tpaLKneQ==
   dependencies:
     "@web3-onboard/common" "^2.4.1"

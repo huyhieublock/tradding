@@ -1,161 +1,92 @@
 // src/utils/walletConfig.ts
-import { CreateConnectorFn } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
-import {
-  Adapter,
-  WalletError,
-  WalletAdapterNetwork,
-  WalletNotReadyError,
-} from "@solana/wallet-adapter-base";
-import {
-  LedgerWalletAdapter,
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from "@solana/wallet-adapter-wallets";
-import {
-  createDefaultAddressSelector,
-  createDefaultAuthorizationResultCache,
-  SolanaMobileWalletAdapter,
-} from "@solana-mobile/wallet-adapter-mobile";
-// XÓA IMPORT CÁC BIẾN HEX Ở ĐÂY ĐỂ TRÁNH LỖI UNDEFINED
 import { type NetworkId } from "@orderly.network/types";
-import injectedOnboard from "@web3-onboard/injected-wallets";
 import { getRuntimeConfig } from "./runtime-config";
-import walletConnectOnboard from "@web3-onboard/walletconnect";
-import binanceWallet from "@binance/w3w-blocknative-connector";
 
-// --- Phần Wagmi (Giữ nguyên) ---
-export const getEvmConnectors = (): CreateConnectorFn[] => {
-  const walletConnectProjectId = getRuntimeConfig(
-    "VITE_WALLETCONNECT_PROJECT_ID"
-  );
-  const isBrowser = typeof window !== "undefined";
+// IMPORT THẲNG TỪ LIBRARY (Không qua biến trung gian)
+import injectedModule from "@web3-onboard/injected-wallets";
+import walletConnectModule from "@web3-onboard/walletconnect";
 
-  const connectors: CreateConnectorFn[] = [injected()];
-
-  if (walletConnectProjectId && isBrowser) {
-    connectors.push(
-      walletConnect({
-        projectId: walletConnectProjectId,
-        showQrModal: true,
-        metadata: {
-          name: getRuntimeConfig("VITE_APP_NAME") || "Orderly App",
-          description:
-            getRuntimeConfig("VITE_APP_DESCRIPTION") || "Orderly Application",
-          url: window.location.origin,
-          icons: [`${window.location.origin}/favicon.webp`],
-        },
-      })
-    );
-  }
-
-  return connectors;
+// Hàm xử lý import an toàn cho Vite
+const getSafeModule = (mod: any) => {
+  // Nếu là function thì trả về luôn
+  if (typeof mod === "function") return mod;
+  // Nếu nằm trong default và là function
+  if (mod && typeof mod.default === "function") return mod.default;
+  // Fallback
+  return mod;
 };
 
-// --- Phần Solana (Giữ nguyên) ---
-export const getSolanaWallets = (networkId: NetworkId) => {
-  const isBrowser = typeof window !== "undefined";
-
-  if (!isBrowser) {
-    return [];
-  }
-
-  return [
-    new PhantomWalletAdapter(),
-    new SolflareWalletAdapter(),
-    new LedgerWalletAdapter(),
-    new SolanaMobileWalletAdapter({
-      addressSelector: createDefaultAddressSelector(),
-      appIdentity: {
-        uri: `${location.protocol}//${location.host}`,
-      },
-      authorizationResultCache: createDefaultAuthorizationResultCache(),
-      chain:
-        networkId === "mainnet"
-          ? WalletAdapterNetwork.Mainnet
-          : WalletAdapterNetwork.Devnet,
-      onWalletNotFound: (adapter: SolanaMobileWalletAdapter) => {
-        console.log("-- mobile wallet adapter", adapter);
-        return Promise.reject(new WalletNotReadyError("wallet not ready"));
-      },
-    }),
-  ];
-};
-
-export const getSolanaConfig = (networkId: NetworkId) => {
-  return {
-    wallets: getSolanaWallets(networkId),
-    onError: (error: WalletError, adapter?: Adapter) => {
-      console.log("-- error", error, adapter);
+// --- Config Chain Cứng ---
+const CHAINS = {
+  testnet: [
+    {
+      id: "0x66eee",
+      token: "ETH",
+      label: "Arbitrum Sepolia",
+      rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
     },
-  };
-};
-
-// --- Phần Web3Onboard ---
-
-export const getOnboardEvmWallets = () => {
-  const walletConnectProjectId = getRuntimeConfig(
-    "VITE_WALLETCONNECT_PROJECT_ID"
-  );
-  const isBrowser = typeof window !== "undefined";
-
-  if (!isBrowser) {
-    return [];
-  }
-
-  const wallets = [injectedOnboard()];
-
-  if (walletConnectProjectId) {
-    wallets.push(
-      binanceWallet({ options: { lng: "en" } }),
-      walletConnectOnboard({
-        projectId: walletConnectProjectId,
-        qrModalOptions: {
-          themeMode: "dark",
-        },
-        dappUrl: window.location.origin,
-      })
-    );
-  }
-
-  return wallets;
+  ],
+  mainnet: [
+    {
+      id: "0xa4b1",
+      token: "ETH",
+      label: "Arbitrum One",
+      rpcUrl: "https://arb1.arbitrum.io/rpc",
+    },
+  ],
 };
 
 export const getEvmInitialConfig = (networkId: NetworkId) => {
-  const wallets = getOnboardEvmWallets();
+  const wallets = [];
 
-  // FIX LỖI TẠI ĐÂY: Dùng chuỗi cứng thay vì biến import
-  const chains =
-    networkId === "testnet"
-      ? [
-          {
-            id: "0x66eee", // Hardcode: Arbitrum Sepolia
-            token: "ETH",
-            label: "Arbitrum Sepolia",
-            rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
-          },
-        ]
-      : [
-          {
-            id: "0xa4b1", // Hardcode: Arbitrum One
-            token: "ETH",
-            label: "Arbitrum One",
-            rpcUrl: "https://arb1.arbitrum.io/rpc",
-          },
-        ];
+  try {
+    // 1. Injected Wallet (Metamask...)
+    const injectedFn = getSafeModule(injectedModule);
 
-  // Trả về cấu trúc phẳng
+    // Gọi hàm khởi tạo ngay lập tức để lấy object WalletModule
+    // Thay vì push function vào, ta push KẾT QUẢ của function đó
+    const injectedWallet = injectedFn();
+
+    if (injectedWallet) {
+      wallets.push(injectedWallet);
+    }
+
+    // 2. WalletConnect
+    const projectId = getRuntimeConfig("VITE_WALLETCONNECT_PROJECT_ID");
+    if (projectId) {
+      const wcFn = getSafeModule(walletConnectModule);
+      const wcWallet = wcFn({
+        projectId,
+        qrModalOptions: { themeMode: "dark" },
+        dappUrl: window.location.origin,
+      });
+      if (wcWallet) wallets.push(wcWallet);
+    }
+  } catch (err) {
+    console.error("Wallet Init Failed:", err);
+  }
+
+  // Log kiểm tra cấu trúc ví
+  // Bạn sẽ thấy mảng chứa Object { label: 'Injected', ... } chứ không phải Function
+  console.log("🛠️ Wallets Ready:", wallets);
+
   return {
-    wallets,
-    chains,
-    appMetadata: {
-      name: getRuntimeConfig("VITE_ORDERLY_BROKER_NAME") || "Orderly DEX",
-      description:
-        getRuntimeConfig("VITE_ORDERLY_BROKER_NAME") ||
-        "DEX powered by Orderly",
-    },
-    connect: {
-      autoConnectLastWallet: true,
+    options: {
+      // Bọc trong options theo đúng type
+      wallets,
+      chains: networkId === "testnet" ? CHAINS.testnet : CHAINS.mainnet,
+      appMetadata: {
+        name: "Orderly DEX",
+        description: "Powered by Orderly",
+      },
+      connect: {
+        autoConnectLastWallet: true,
+      },
     },
   };
 };
+
+// --- Mock ---
+export const getSolanaWallets = () => [];
+export const getSolanaConfig = () => ({});
+export const getEvmConnectors = () => [];
