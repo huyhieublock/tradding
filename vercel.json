@@ -12,5 +12,15 @@
   "routes": [
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/orderly/:path*",
+      "destination": "https://testnet-api-evm.orderly.org/v1/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
