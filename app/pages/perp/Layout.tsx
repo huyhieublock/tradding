@@ -1,14 +1,23 @@
-import { useOrderlyConfig } from "@/utils/config";
 import { Outlet } from "react-router-dom";
-import Header from "./Header";
+import { Scaffold } from "@orderly.network/ui-scaffold";
+import { useOrderlyConfig } from "@/utils/config";
+import { useNav } from "@/hooks/useNav";
 
 export default function PerpLayout() {
   const config = useOrderlyConfig();
+  const { onRouteChange } = useNav();
 
   return (
-    <div>
-      <Header />
+    <Scaffold
+      mainNavProps={config.scaffold.mainNavProps}
+      footerProps={config.scaffold.footerProps}
+      routerAdapter={{
+        onRouteChange,
+        currentPath: "/",
+      }}
+      bottomNavProps={config.scaffold.bottomNavProps}
+    >
       <Outlet />
-    </div>
+    </Scaffold>
   );
 }
